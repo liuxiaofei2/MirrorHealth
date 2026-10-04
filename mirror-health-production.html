@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>魔镜健康 MagicMirror Health · 产品与技术方案</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --ink: #1f2328;
+    --ink-2: #5f6672;
+    --ink-3: #8a909c;
+    --line: #e6e8ec;
+    --teal: #0f6e56;
+    --teal-l: #e1f5ee;
+    --teal-m: #5dcaa5;
+    --blue: #185fa5;
+    --blue-l: #e6f1fb;
+    --blue-m: #85b7eb;
+    --amber: #854f0b;
+    --amber-l: #faeeda;
+    --red: #a32d2d;
+    --red-l: #fcebeb;
+    --purple: #534ab7;
+    --purple-l: #eeedfe;
+    --gray-l: #f1efe8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px 80px; }
+
+  header {
+    background: var(--teal);
+    color: #fff;
+    padding: 56px 24px 48px;
+    margin-bottom: 40px;
+  }
+  header .inner { max-width: 960px; margin: 0 auto; }
+  header h1 { margin: 0 0 12px; font-size: 34px; font-weight: 600; letter-spacing: -0.5px; }
+  header p { margin: 0; color: #9fe1cb; font-size: 16px; line-height: 1.8; max-width: 720px; }
+  .kpis { display: flex; flex-wrap: wrap; gap: 40px; margin-top: 32px; }
+  .kpi-num { font-size: 26px; font-weight: 600; color: #fff; }
+  .kpi-label { font-size: 13px; color: #9fe1cb; margin-top: 2px; }
+
+  section { margin-bottom: 52px; }
+  h2 {
+    font-size: 22px; font-weight: 600; margin: 0 0 6px;
+    padding-bottom: 12px; border-bottom: 2px solid var(--line);
+  }
+  h2 .num { color: var(--teal-m); margin-right: 10px; font-weight: 600; }
+  h3 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; }
+  .lead { color: var(--ink-2); margin: 14px 0 22px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; padding: 22px 24px; margin-bottom: 16px;
+  }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 720px) {
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 8px 0; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--ink-3); font-weight: 500; font-size: 13px; background: #fbfcfd; }
+  tr:last-child td { border-bottom: none; }
+  td code, p code, li code {
+    background: var(--gray-l); padding: 1px 6px; border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px;
+  }
+
+  .tag {
+    display: inline-block; padding: 2px 10px; border-radius: 999px;
+    font-size: 12px; line-height: 1.7; white-space: nowrap;
+  }
+  .t-teal { background: var(--teal-l); color: var(--teal); }
+  .t-blue { background: var(--blue-l); color: var(--blue); }
+  .t-amber { background: var(--amber-l); color: var(--amber); }
+  .t-red { background: var(--red-l); color: var(--red); }
+  .t-gray { background: var(--gray-l); color: var(--ink-2); }
+  .t-purple { background: var(--purple-l); color: var(--purple); }
+
+  .flow { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+  .step {
+    display: flex; gap: 16px; align-items: flex-start;
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 3px solid var(--blue-m); border-radius: 10px; padding: 16px 20px;
+  }
+  .step.cloud { border-left-color: var(--teal-m); }
+  .step-idx {
+    flex: 0 0 26px; height: 26px; border-radius: 50%;
+    background: var(--blue); color: #fff; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; margin-top: 2px;
+  }
+  .step.cloud .step-idx { background: var(--teal); }
+  .step-body strong { display: block; font-weight: 600; margin-bottom: 2px; }
+  .step-body span { color: var(--ink-2); font-size: 14px; }
+
+  .arch { display: flex; flex-direction: column; gap: 12px; margin: 20px 0; }
+  .layer { border-radius: 14px; padding: 16px 18px; }
+  .layer-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+  .layer-items { display: flex; flex-wrap: wrap; gap: 10px; }
+  .box {
+    flex: 1 1 180px; background: rgba(255,255,255,0.72);
+    border-radius: 8px; padding: 10px 14px;
+  }
+  .box strong { display: block; font-size: 14px; font-weight: 600; }
+  .box span { font-size: 12.5px; opacity: 0.78; }
+  .l-blue { background: var(--blue-l); color: #042c53; }
+  .l-teal { background: var(--teal-l); color: #04342c; }
+  .l-gray { background: var(--gray-l); color: #2c2c2a; }
+  .l-purple { background: var(--purple-l); color: #26215c; }
+
+  .report {
+    background: #fff; border: 1px solid var(--line); border-radius: 12px;
+    padding: 24px 26px; font-size: 15px; line-height: 2; color: #3a3f47;
+  }
+  .report .head { font-weight: 600; color: var(--ink); }
+  .report mark { background: var(--amber-l); color: var(--amber); padding: 1px 4px; border-radius: 3px; }
+  .report .meta {
+    margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line);
+    font-size: 13px; color: var(--ink-3);
+  }
+
+  .risk { border-left: 3px solid var(--amber); background: var(--amber-l);
+          border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 14px; }
+  .risk strong { color: var(--amber); display: block; margin-bottom: 6px; font-size: 15px; }
+  .risk p { margin: 0 0 8px; font-size: 14px; color: #5f4a1e; }
+  .risk .rec { font-size: 14px; color: var(--teal); }
+  .risk .rec::before { content: "建议 · "; font-weight: 600; }
+
+  .redline { border-left: 3px solid var(--red); background: var(--red-l);
+             border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 14px; }
+  .redline strong { color: var(--red); display: block; margin-bottom: 6px; font-size: 15px; }
+  .redline p { margin: 0; font-size: 14px; color: #6b2626; }
+
+  ul, ol { padding-left: 22px; margin: 10px 0; }
+  li { margin-bottom: 6px; }
+  li::marker { color: var(--ink-3); }
+
+  .phase { display: flex; gap: 18px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .phase:last-child { border-bottom: none; }
+  .phase-when {
+    flex: 0 0 108px; font-size: 13px; color: var(--teal); font-weight: 600;
+  }
+  .phase-body strong { display: block; margin-bottom: 6px; }
+  .phase-body p { margin: 0; color: var(--ink-2); font-size: 14px; }
+
+  footer {
+    margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--ink-3); line-height: 1.9;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <h1>魔镜健康 MagicMirror Health</h1>
+    <p>家庭无感健康监测终端。用户保持晨起刷牙动线不变，系统自动完成
+       人脸识别、体格采集、牙齿与面部影像采集、云端分析，并把分级健康报告推到家长的小程序里。</p>
+    <div class="kpis">
+      <div><div class="kpi-num">2-12 岁</div><div class="kpi-label">核心人群 · 顺带覆盖成人与长辈</div></div>
+      <div><div class="kpi-num">120 秒</div><div class="kpi-label">一次刷牙完成一次采集</div></div>
+      <div><div class="kpi-num">5 级</div><div class="kpi-label">日 / 周 / 月 / 季 / 年报告</div></div>
+      <div><div class="kpi-num">0 操作</div><div class="kpi-label">用户无需主动配合</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section>
+  <h2><span class="num">01</span>产品定位</h2>
+  <p class="lead">不做"需要用户主动配合的健康设备"，而是寄生在既有生活习惯上——每天刷牙的两分钟，本身就是采集窗口。</p>
+  <div class="grid3">
+    <div class="card">
+      <span class="tag t-teal">原则一</span>
+      <h3>零主动操作</h3>
+      <p style="margin:0;color:var(--ink-2);font-size:14px">用户不改动线、不掏手机、不点按钮。上秤即唤醒，刷牙即采集。</p>
+    </div>
+    <div class="card">
+      <span class="tag t-teal">原则二</span>
+      <h3>身份自动识别</h3>
+      <p style="margin:0;color:var(--ink-2);font-size:14px">一家人共用一个终端，靠人脸比对区分成员，不需要登录或切换账号。</p>
+    </div>
+    <div class="card">
+      <span class="tag t-teal">原则三</span>
+      <h3>结论先行</h3>
+      <p style="margin:0;color:var(--ink-2);font-size:14px">家长打开看到的是"该做什么"，不是一堆原始数字。</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">02</span>系统架构</h2>
+  <p class="lead">四层链路：现场采集、云端分析与报告、数据存储、小程序呈现。</p>
+
+  <div class="arch">
+    <div class="layer l-blue">
+      <div class="layer-title">采集层 · 刷牙场景无感采集</div>
+      <div class="layer-items">
+        <div class="box"><strong>魔镜终端（阶段一用安卓手机模拟）</strong><span>人脸 · 牙齿 · 身高 · 语音交互</span></div>
+        <div class="box"><strong>智能地垫（BLE 电子秤）</strong><span>体重 · 体脂 · 压力感应唤醒</span></div>
+      </div>
+    </div>
+    <div class="layer l-teal">
+      <div class="layer-title">服务层 · 云端分析与报告生成</div>
+      <div class="layer-items">
+        <div class="box"><strong>AI 识别引擎</strong><span>人脸比对 · 龋齿检测</span></div>
+        <div class="box"><strong>健康分析引擎</strong><span>生长曲线 · 达标评估</span></div>
+        <div class="box"><strong>报告生成服务</strong><span>日 / 周 / 月 / 季 / 年</span></div>
+        <div class="box"><strong>消息推送服务</strong><span>微信订阅消息 · 异常告警</span></div>
+      </div>
+    </div>
+    <div class="layer l-gray">
+      <div class="layer-title">数据层 · 存储与缓存</div>
+      <div class="layer-items">
+        <div class="box"><strong>PostgreSQL</strong><span>档案 · 指标 · 报告</span></div>
+        <div class="box"><strong>MinIO / OSS</strong><span>人脸 · 牙齿影像</span></div>
+        <div class="box"><strong>Redis</strong><span>会话 · 异步任务</span></div>
+      </div>
+    </div>
+    <div class="layer l-purple">
+      <div class="layer-title">客户端 · 微信小程序（家长端）</div>
+      <div class="layer-items">
+        <div class="box"><strong>家庭成员管理 · 成长曲线 · 健康档案 · 分级报告 · 提醒</strong><span>打开即看，家长零操作</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">03</span>一次采集的完整链路</h2>
+  <p class="lead">前三步在现场完成，后三步在云端完成。</p>
+
+  <div class="flow">
+    <div class="step">
+      <div class="step-idx">1</div>
+      <div class="step-body"><strong>地垫触发唤醒</strong><span>压力感应自动开机，用户零操作</span></div>
+    </div>
+    <div class="step">
+      <div class="step-idx">2</div>
+      <div class="step-body"><strong>人脸识别配对</strong><span>与家庭人脸库比对，确认为某位成员，语音播报姓名供用户否决</span></div>
+    </div>
+    <div class="step">
+      <div class="step-idx">3</div>
+      <div class="step-body"><strong>刷牙场景同步采集</strong><span>面部影像 · 牙齿近拍 · 身高体重 · 刷牙时长</span></div>
+    </div>
+    <div class="step cloud">
+      <div class="step-idx">4</div>
+      <div class="step-body"><strong>加密上传入库</strong><span>影像与数值打包上传，断网本地缓存、恢复后自动补传</span></div>
+    </div>
+    <div class="step cloud">
+      <div class="step-idx">5</div>
+      <div class="step-body"><strong>AI 分析与历史比对</strong><span>龋齿检测 · 面部异常 · 生长指数达标评估 · 增速趋势</span></div>
+    </div>
+    <div class="step cloud">
+      <div class="step-idx">6</div>
+      <div class="step-body"><strong>生成报告并推送</strong><span>健康日报生成，微信订阅消息送达家长</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">04</span>健康指标与判定口径</h2>
+  <p class="lead">所有判定必须能追溯到原始测量值与公开标准，这是产品可信度的底座。</p>
+
+  <h3>儿童（2-12 岁）</h3>
+  <table>
+    <thead><tr><th>指标</th><th>计算方式</th><th>判定依据</th></tr></thead>
+    <tbody>
+      <tr><td>年龄别身高 HAZ</td><td>Z = (测量值 − 中位数) / 标准差</td><td>7 岁以下 WS/T 423-2022；7 岁以上 WS/T 586-2018</td></tr>
+      <tr><td>年龄别体重 WAZ</td><td>同上</td><td>同上</td></tr>
+      <tr><td>BMI 别年龄 BAZ</td><td>BMI = 体重 / 身高²，再查表</td><td>同上</td></tr>
+      <tr><td>生长速率</td><td>(本次 − 上次) / 间隔月数</td><td>学龄期月增高参考线 0.3 cm</td></tr>
+      <tr><td>Z 值变化</td><td>本次 Z − 上次 Z</td><td>下降超 0.67 提示生长偏离</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Z 分数分级与处置</h3>
+  <table>
+    <thead><tr><th>区间</th><th>判定</th><th>处置建议</th></tr></thead>
+    <tbody>
+      <tr><td>Z ≥ 2</td><td><span class="tag t-blue">偏高</span></td><td>观察</td></tr>
+      <tr><td>−2 &lt; Z &lt; 2</td><td><span class="tag t-teal">正常</span></td><td>常规记录</td></tr>
+      <tr><td>−3 &lt; Z ≤ −2</td><td><span class="tag t-amber">未达标</span></td><td>加强监测，营养评估</td></tr>
+      <tr><td>Z ≤ −3</td><td><span class="tag t-red">显著偏低</span></td><td>建议就医</td></tr>
+    </tbody>
+  </table>
+
+  <h3>成人与长辈</h3>
+  <table>
+    <thead><tr><th>指标</th><th>判定</th></tr></thead>
+    <tbody>
+      <tr><td>BMI</td><td>&lt; 18.5 偏瘦 / 18.5-23.9 正常 / 24-27.9 超重 / ≥ 28 肥胖（中国标准）</td></tr>
+      <tr><td>体重波动</td><td>30 天内变动超 5% 提示关注</td></tr>
+      <tr><td>老年人专项</td><td>6 个月内非主动减重超 5% 属警示信号</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2><span class="num">05</span>报告体系</h2>
+  <p class="lead">五级报告全部由规则引擎加模板生成，不依赖大模型自由发挥——保证可解释、可审计、措辞可控。</p>
+
+  <table>
+    <thead><tr><th>报告</th><th>触发时间</th><th>内容重点</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag t-teal">健康日报</span></td><td>每次采集后</td><td>当日数值、刷牙时长、异常提示</td></tr>
+      <tr><td><span class="tag t-blue">健康周报</span></td><td>每周一 08:00</td><td>本周均值、波动、达标情况</td></tr>
+      <tr><td><span class="tag t-blue">健康月报</span></td><td>每月 1 日</td><td>月增长量、生长速率、趋势判定</td></tr>
+      <tr><td><span class="tag t-purple">健康季报</span></td><td>每季首月 1 日</td><td>季度成长、曲线偏移、口腔变化</td></tr>
+      <tr><td><span class="tag t-purple">健康年报</span></td><td>每年 1 月 1 日</td><td>年度成长总结、同比、长期趋势、就医建议</td></tr>
+    </tbody>
+  </table>
+
+  <h3>真实生成的日报样例</h3>
+  <p style="color:var(--ink-3);font-size:13.5px;margin-top:-4px">
+    以下为系统对演示数据（小明，7 岁 6 个月，男）实际输出的报告，未经人工润色。
+  </p>
+  <div class="report">
+    <span class="head">2026.9.17，小明，7 岁，身高 1.14 m，体重 17.5 kg。</span>
+    身高 114.0 cm，<mark>未达到同龄标准区间</mark>，低于约 98.1% 的同龄孩子。建议加强营养与睡眠监测，
+    3 个月后复测；若持续无改善请咨询儿童生长发育科。体重 17.5 kg，<mark>低于同龄标准区间</mark>，
+    低于约 99.3% 的同龄孩子。建议关注进食量与营养结构，1 个月后复测。
+    近 1.1 个月身高体重变化不明显（身高 +0.3 cm，体重 +0.0 kg）。当前变化幅度接近家用测量精度上限，
+    尚不足以判定异常。建议连续记录 2-3 个月，若仍无明显提升再行咨询。测量时请保持同一位置、同一时段。
+    另外<mark>鼻部红肿</mark>，请关注鼻子健康。若伴随鼻塞、流涕或持续泛红，建议至耳鼻喉科查看。
+    刷牙时长 2 分钟，达标，正处于换牙期，<mark>上牙左侧可见可疑龋坏区域</mark>，
+    请关注牙齿健康，建议采用口腔内镜扫描或至口腔科做专业检查确认。
+    <div class="meta">
+      对应异常码：GROWTH_STUNTED（身高未达标）· GROWTH_UNDERWEIGHT（体重未达标）·
+      GROWTH_STAGNANT_WATCH（增速需观察）· FACIAL_NASAL_REDNESS（鼻部红肿）·
+      DENTAL_CAVITY_SUSPECT（疑似龋坏）· DENTAL_TEETHING（换牙期）· DENTAL_BRUSH_OK（刷牙达标）
+    </div>
+  </div>
+
+  <h3 style="margin-top:32px">成长曲线</h3>
+  <p style="color:var(--ink-2);font-size:14px">
+    单指标曲线（身高 / 体重 / BMI）叠加 P3、P50、P97 同龄参考线，横轴统一为月龄，
+    最近一次数据点高亮。家长一眼就能看到孩子当前在同龄人中的位置，以及趋势是往上走还是往下走。
+  </p>
+</section>
+
+<section>
+  <h2><span class="num">06</span>技术选型与工程要点</h2>
+
+  <table>
+    <thead><tr><th>层</th><th>选型</th><th>理由</th></tr></thead>
+    <tbody>
+      <tr><td>采集端</td><td>Kotlin + CameraX + ML Kit + BLE GATT</td><td>阶段一复用安卓手机，后续平移至魔镜主板（RK3588 级 AOSP）</td></tr>
+      <tr><td>服务端</td><td>Python + FastAPI + SQLAlchemy</td><td>AI 生态最完整，人脸与图像模型可直接复用</td></tr>
+      <tr><td>数据库</td><td>PostgreSQL + Redis + 对象存储</td><td>JSONB 存指标快照；影像按成员分桶前缀</td></tr>
+      <tr><td>小程序</td><td>微信原生小程序</td><td>订阅消息、蓝牙、相机能力原生支持最好</td></tr>
+    </tbody>
+  </table>
+
+  <h3>三个值得说明的工程设计</h3>
+
+  <div class="grid3">
+    <div class="card">
+      <span class="tag t-teal">设计一</span>
+      <h3 style="margin-top:10px">判定与文案分离</h3>
+      <p style="margin:0;color:var(--ink-2);font-size:14px">
+        评估层只产出结构化的判定结果（异常码、级别、证据链），渲染层只做文案拼装。
+        因此每条给家长的结论都能追溯到原始测量值和判定标准，不会出现"结论正确但没人知道依据"的情况。
+      </p>
+    </div>
+    <div class="card">
+      <span class="tag t-amber">设计二</span>
+      <h3 style="margin-top:10px">测量精度保护</h3>
+      <p style="margin:0;color:var(--ink-2);font-size:14px">
+        单次身高测量误差约 ±0.5 cm，而儿童月增高只有 0.3-0.6 cm——误差和信号同量级。
+        落在噪声范围内的"零增长"不会被判定为异常，而是降级为"需持续观察"并降低置信度，
+        避免仪器抖动给家长制造焦虑。
+      </p>
+    </div>
+    <div class="card">
+      <span class="tag t-blue">设计三</span>
+      <h3 style="margin-top:10px">断网不丢数据</h3>
+      <p style="margin:0;color:var(--ink-2);font-size:14px">
+        牙刷场景不能因为网络问题让用户白刷一次。采集到的影像与数值先落本地队列，
+        提交失败时入队，下次开机或网络恢复后自动补传。
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">07</span>开发路线图</h2>
+
+  <div class="card" style="padding:8px 24px">
+    <div class="phase">
+      <div class="phase-when">阶段一 · 已完成</div>
+      <div class="phase-body">
+        <strong>全链路验证</strong>
+        <p>用安卓手机加蓝牙电子秤跑通"采集 → 上传 → 分析 → 报告 → 小程序"整条链路。
+           服务端 20 个接口、评估与报告引擎、安卓采集端、小程序三个页面均已落地，
+           端到端自检 31 项通过。</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-when">阶段二 · 4-6 周</div>
+      <div class="phase-body">
+        <strong>真实场景与算法</strong>
+        <p>浴室环境、口沫、运动模糊条件下采真实样本评估可用率；补齐端侧影像质量门槛；
+           替换官方生长标准表；人脸引擎切生产实现并调优阈值；地垫采购与协议对接。</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-when">阶段三 · 6-10 周</div>
+      <div class="phase-body">
+        <strong>硬件原型</strong>
+        <p>半透反射镜 + 屏幕 + 摄像头 + 补光 + 测距模组，主板选型，结构与防水设计（浴室环境）。</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-when">阶段四 · 并行</div>
+      <div class="phase-body">
+        <strong>合规与小批量</strong>
+        <p>监护人同意流程、人脸信息单独同意、儿童个人信息保护合规评估、隐私政策与数据处理协议。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">08</span>需要拍板的五个问题</h2>
+  <p class="lead">这几个问题的答案会直接改变硬件 BOM 和产品节奏，建议在阶段二启动前定下来。</p>
+
+  <div class="risk">
+    <strong>1. 身高到底怎么采？</strong>
+    <p>这是整条链路最大的硬件卡点。体重有地垫，人脸有摄像头，唯独身高需要额外测距模组。
+       测距方案的精度受站姿、头发厚度影响大，实测误差常在 ±1 cm 以上，
+       而儿童月增高只有 0.3-0.6 cm，误差与信号同量级，趋势判断会失真。</p>
+    <span class="rec">阶段二先做一次真实标定实验，对比测距与人工补录的偏差。若误差压不到 ±0.3 cm 以内，
+      就如实承认身高只能做季度级趋势，把月度报告的重心放在体重、口腔、面部上。</span>
+  </div>
+
+  <div class="risk">
+    <strong>2. 牙齿影像的质量上限在哪？</strong>
+    <p>手机摄像头隔着口沫拍牙列，能拿到多少可用信息需要实测。龋齿识别对影像质量极其敏感。</p>
+    <span class="rec">考虑"魔镜 + 一次性口腔内窥镜"组合方案。内窥镜单价低，插入手机即可获得清晰牙面影像，
+      用户按季度用一次即可。这样第一阶段只做"刷牙时长 + 换牙期提示"，龋齿检测放到内窥镜方案里做。</span>
+  </div>
+
+  <div class="risk">
+    <strong>3. 健康结论的医学边界</strong>
+    <p>当前所有输出都是健康提示，措辞严格避免确诊性表述。是否引入执业医师复核，
+       决定了合规路径和成本结构。纯提示合规压力小，但误报漏报责任需在协议中明确；
+       医生复核可信度高，但形成医疗服务，需要相应资质。</p>
+    <span class="rec">第一阶段保持纯提示，在报告页显著位置声明"不作为诊断依据"。</span>
+  </div>
+
+  <div class="risk">
+    <strong>4. 先做儿童还是先用成人跑通？</strong>
+    <p>儿童是需求的原点，但儿童加人脸等于双重敏感个人信息，合规成本最高。</p>
+    <span class="rec">产品定位仍以儿童为核心，但数据架构上先支持成人场景，
+      用成人数据跑通算法与运营，儿童模块在合规材料齐备后再开。这样不至于让合规成为上线的唯一阻塞项。</span>
+  </div>
+
+  <div class="risk">
+    <strong>5. 商业模式与 BOM 上限</strong>
+    <p>硬件售卖加会员订阅，还是硬件补贴加服务收费？这决定了 BOM 成本上限，
+       进而决定魔镜的硬件规格——能不能上测距模组、能不能上更大的屏。</p>
+    <span class="rec">先定 BOM 上限，再反推硬件规格清单，避免原型做完了发现成本打不住。</span>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">09</span>合规红线</h2>
+  <p class="lead">本产品采集不满十四周岁未成年人的个人信息，同时采集人脸识别信息，二者均属《个人信息保护法》定义的敏感个人信息。</p>
+
+  <div class="redline">
+    <strong>监护人与人脸双同意，不可打包</strong>
+    <p>儿童信息处理需监护人单独同意，人脸信息处理需另行单独同意。数据模型内置两个独立标记，缺一不可参与采集。</p>
+  </div>
+  <div class="redline">
+    <strong>生物识别信息加密存储与访问审计</strong>
+    <p>人脸特征必须加密落库，密钥与业务库分离。原始影像仅提供短时效签名地址，不开放公网直读。</p>
+  </div>
+  <div class="redline">
+    <strong>数据最小必要</strong>
+    <p>不上传与健康分析无关的原始帧。端侧先完成人脸检测与对齐，只上传裁剪后的图。</p>
+  </div>
+  <div class="redline">
+    <strong>删除权与留存期限</strong>
+    <p>提供一键删除全家数据的入口，级联清理成员、影像、向量与报告。原始影像默认留存 12 个月，策略可配置。</p>
+  </div>
+
+  <h3 style="margin-top:32px">上线前必须替换的占位实现</h3>
+  <p style="color:var(--ink-2);font-size:14px">
+    以下部分在代码中已用显式标注标出，均为打通链路用的占位实现，不具备生产可用的准确性：
+  </p>
+  <table>
+    <thead><tr><th>模块</th><th>当前实现</th><th>上线要求</th></tr></thead>
+    <tbody>
+      <tr><td>生长标准表</td><td>结构占位用的近似值</td><td>替换为 WS/T 423-2022、WS/T 586-2018 官方数据</td></tr>
+      <tr><td>龋齿检测</td><td>亮度与局部对比启发式</td><td>牙列分割 + 龋齿分类模型</td></tr>
+      <tr><td>面部红肿检测</td><td>RGB 通道差异启发式</td><td>面部关键点 + 皮肤状态模型</td></tr>
+      <tr><td>人脸识别</td><td>伪特征向量（仅验链路）</td><td>生产级人脸识别模型</td></tr>
+      <tr><td>人脸向量存储</td><td>明文落库</td><td>AES-256-GCM + KMS 密钥分离</td></tr>
+      <tr><td>微信登录</td><td>code 直当 openid（仅联调）</td><td>code2session + 带过期时间的 JWT</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>
+  魔镜健康 MagicMirror Health · 产品与技术方案 v0.1<br>
+  本文档对应的代码仓库结构：服务端（Python / FastAPI）、魔镜采集端（Kotlin / 安卓）、微信小程序（原生）<br>
+  本产品输出内容均为健康提示，不作为医学诊断依据。
+</footer>
+
+</div>
+</body>
+</html>
